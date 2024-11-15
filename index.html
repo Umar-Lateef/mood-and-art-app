@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    .mode-switch {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+    }
+
+    .switch-btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .switch-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+
+    /* Mood Tracker Styles */
+    .mood-tracker {
+      display: none;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      padding: 20px;
+    }
+
+    .mood-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    .mood-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .mood-btn {
+      font-size: 2em;
+      padding: 10px;
+      border: none;
+      background: white;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .mood-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .mood-history {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      min-height: 100px;
+    }
+
+    .mood-entry {
+      font-size: 1.5em;
+      animation: popup 0.3s ease-out;
+    }
+
+    @keyframes popup {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    /* Particle Canvas Styles */
+    .particle-canvas {
+      display: none;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    .controls {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      color: white;
+      backdrop-filter: blur(5px);
+    }
+
+    .control-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input[type="range"] {
+      width: 200px;
+      margin-bottom: 10px;
+    }
+
+    .control-btn {
+      background: #fff;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+      transition: all 0.3s ease;
+    }
+
+    .control-btn:hover {
+      background: #ddd;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="mode-switch">
+    <button class="switch-btn" onclick="toggleMode()">Switch Mode</button>
+  </div>
+
+  <!-- Mood Tracker -->
+  <div class="mood-tracker" id="moodTracker">
+    <div class="mood-container">
+      <h1>How are you feeling today? 🤔</h1>
+      
+      <div class="mood-buttons">
+        <button class="mood-btn" onclick="addMood('😊')">😊</button>
+        <button class="mood-btn" onclick="addMood('😍')">😍</button>
+        <button class="mood-btn" onclick="addMood('😴')">😴</button>
+        <button class="mood-btn" onclick="addMood('😫')">😫</button>
+        <button class="mood-btn" onclick="addMood('😡')">😡</button>
+        <button class="mood-btn" onclick="addMood('🤪')">🤪</button>
+      </div>
+
+      <h2>Your Mood History:</h2>
+      <div class="mood-history" id="moodHistory"></div>
+
+      <div class="stats" id="stats">
+        Total moods tracked: 0
+      </div>
+    </div>
+  </div>
+
+  <!-- Particle Canvas -->
+  <div class="particle-canvas" id="particleCanvas">
+    <canvas id="canvas"></canvas>
+    
+    <div class="controls">
+      <div class="control-group">
+        <label>Particle Size</label>
+        <input type="range" id="size" min="1" max="20" value="5">
+      </div>
+      <div class="control-group">
+        <label>Particle Speed</label>
+        <input type="range" id="speed" min="1" max="20" value="8">
+      </div>
+      <div class="control-group">
+        <label>Color Shift Speed</label>
+        <input type="range" id="colorSpeed" min="1" max="50" value="20">
+      </div>
+      <button class="control-btn" onclick="clearCanvas()">Clear Canvas</button>
+      <button class="control-btn" onclick="toggleAutoMode()">Toggle Auto Mode</button>
+    </div>
+  </div>
+
+  <script>
+    // Mode switching
+    let currentMode = 'mood'; // 'mood' or 'particle'
+
+    function toggleMode() {
+      const moodTracker = document.getElementById('moodTracker');
+      const particleCanvas = document.getElementById('particleCanvas');
+      
+      if (currentMode === 'mood') {
+        moodTracker.style.display = 'none';
+        particleCanvas.style.display = 'block';
+        currentMode = 'particle';
+        if (!animationStarted) {
+          animate();
+          animationStarted = true;
+        }
+      } else {
+        moodTracker.style.display = 'block';
+        particleCanvas.style.display = 'none';
+        currentMode = 'mood';
+      }
+    }
+
+    // Mood Tracker Logic
+    let moodCount = 0;
+    const moodHistory = document.getElementById('moodHistory');
+    const stats = document.getElementById('stats');
+
+    function addMood(mood) {
+      const moodEntry = document.createElement('span');
+      moodEntry.className = 'mood-entry';
+      moodEntry.textContent = mood;
+      moodHistory.appendChild(moodEntry);
+      
+      moodCount++;
+      stats.textContent = `Total moods tracked: ${moodCount}`;
+
+      if (moodHistory.children.length > 20) {
+        moodHistory.removeChild(moodHistory.children[0]);
+      }
+    }
+
+    // Particle Canvas Logic
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let hue = 0;
+    let isDrawing = false;
+    let autoMode = false;
+    let autoX = 0;
+    let autoY = 0;
+    let animationStarted = false;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = parseFloat(document.getElementById('size').value);
+        this.speedX = Math.random() * 2 - 1;
+        this.speedY = Math.random() * 2 - 1;
+        this.color = `hsl(${hue}, 100%, 50%)`;
+      }
+
+      update() {
+        const speed = parseFloat(document.getElementById('speed').value) / 4;
+        this.x += this.speedX * speed;
+        this.y += this.speedY * speed;
+        if (this.size > 0.2) this.size -= 0.1;
+      }
+
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function createParticles(x, y) {
+      for (let i = 0; i < 5; i++) {
+        particles.push(new Particle(x, y));
+      }
+    }
+
+    function handleParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].size <= 0.2) {
+          particles.splice(i, 1);
+        }
+      }
+    }
+
+    function animate() {
+      if (currentMode === 'particle') {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        handleParticles();
+        hue += parseFloat(document.getElementById('colorSpeed').value) / 10;
+        
+        if (autoMode) {
+          const time = Date.now() / 1000;
+          autoX = canvas.width/2 + Math.cos(time) * 200;
+          autoY = canvas.height/2 + Math.sin(time * 2) * 200;
+          createParticles(autoX, autoY);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    function clearCanvas() {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      particles = [];
+    }
+
+    function toggleAutoMode() {
+      autoMode = !autoMode;
+    }
+
+    canvas.addEventListener('mousedown', () => isDrawing = true);
+    canvas.addEventListener('mouseup', () => isDrawing = false);
+    canvas.addEventListener('mousemove', (e) => {
+      if (isDrawing) {
+        createParticles(e.x, e.y);
+      }
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+      isDrawing = true;
+      e.preventDefault();
+    });
+    canvas.addEventListener('touchend', () => isDrawing = false);
+    canvas.addEventListener('touchmove', (e) => {
+      if (isDrawing) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        createParticles(
+          touch.clientX - rect.left,
+          touch.clientY - rect.top
+        );
+      }
+      e.preventDefault();
+    });
+
+    // Start with mood tracker visible
+    document.getElementById('moodTracker').style.display = 'block';
+  </script>
+</body>
+</html>
