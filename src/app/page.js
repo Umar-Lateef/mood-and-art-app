@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Smile, Palette, Heart, RotateCw } from 'lucide-react';
+import { Smile, Palette, Heart, RotateCw, Trash2 } from 'lucide-react';
 
 export default function MoodArtApp() {
   const [currentMode, setCurrentMode] = useState('mood');
@@ -45,6 +45,11 @@ export default function MoodArtApp() {
     };
     setMoodHistory(prev => [newMood, ...prev]);
     setMoodCount(prev => prev + 1);
+  };
+
+  const removeMood = (id) => {
+    setMoodHistory(prev => prev.filter(mood => mood.id !== id));
+    setMoodCount(prev => Math.max(0, prev - 1));
   };
 
   // Art Functions
@@ -186,6 +191,13 @@ export default function MoodArtApp() {
                     <div className="text-sm font-medium text-white">{mood.label}</div>
                     <div className="text-xs text-white/60">{mood.timestamp}</div>
                   </div>
+                  <button
+                    onClick={() => removeMood(mood.id)}
+                    className="text-white/60 hover:text-red-400 transition-colors"
+                    aria-label="Delete mood"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
               ))}
             </div>
