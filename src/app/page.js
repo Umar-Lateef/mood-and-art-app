@@ -25,6 +25,12 @@ export default function MoodArtApp() {
     { emoji: '😤', label: 'Angry', color: 'bg-orange-500' },
     { emoji: '😢', label: 'Sad', color: 'bg-indigo-400' },
     { emoji: '😴', label: 'Tired', color: 'bg-purple-400' },
+    { emoji: '😰', label: 'Anxious', color: 'bg-green-500' },
+    { emoji: '🤩', label: 'Excited', color: 'bg-pink-400' },
+    { emoji: '🙏', label: 'Grateful', color: 'bg-teal-400' },
+    { emoji: '😑', label: 'Bored', color: 'bg-gray-400' },
+    { emoji: '😲', label: 'Surprised', color: 'bg-cyan-400' },
+    { emoji: '😕', label: 'Confused', color: 'bg-amber-400' },
   ];
 
   useEffect(() => {
